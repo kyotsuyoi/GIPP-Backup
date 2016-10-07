@@ -16,7 +16,7 @@ namespace GIPPBackup
     public partial class frmBackup : Form
     {
 
-        MySql.Data.MySqlClient.MySqlConnection connection = new MySql.Data.MySqlClient.MySqlConnection("server=192.168.0.221; user id=admin; password=admin; database=pegpese;");
+        MySql.Data.MySqlClient.MySqlConnection connection;
         MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand();
         string vTime;
         Thread t; //Thread que atualiza a lblFiles durante o backup.
@@ -28,22 +28,29 @@ namespace GIPPBackup
         public frmBackup()
         {
             InitializeComponent();
-            
+
+            try
+            {   // Abrir o arquivo para autenticar o servidor.
+                using (StreamReader sr = new StreamReader(@"C:\Program Files (x86)\GIPP\autentication"))
+                {
+                    // Ler o conteudo do arquivo para uma string.
+                    String line = sr.ReadToEnd();
+                    connection = new MySql.Data.MySqlClient.MySqlConnection(line);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Arquivo não pode ser lido: " + ex.Message, "Erro!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             this.notifyIcon.ContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(); //Cria e configura o icone de notificação do Backup.
             this.notifyIcon.ContextMenuStrip.Items.Add("Mostrar");
             this.notifyIcon.ContextMenuStrip.Items.Add("Ocultar");
             this.notifyIcon.ContextMenuStrip.Items.Add("Fechar");
             this.notifyIcon.ContextMenuStrip.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.notifyIcon_MenuClick);
             
-            lblFiles.Text = "Verificando backup...";
-
-            MySql.Data.MySqlClient.MySqlConnection connection = new MySql.Data.MySqlClient.MySqlConnection("server=192.168.0.221; user id=admin; password=admin; database=pegpese;");
-            MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand();
             cmd.Connection = connection;
-            vError = false;
-            u = new Thread(uThreadProcess);
-            cmbBkpTime.Text = "24"; //A Thread 'u' será iniciada dentro de cmbBkpTime_SelectedIndexChanged.
-            vTime = "24";
 
             try
             {
@@ -62,9 +69,17 @@ namespace GIPPBackup
                 connection.Close();
                 connection.Dispose();
             }
+
+            lblFiles.Text = "Verificando backup...";
+
+            vError = false;
+            u = new Thread(uThreadProcess);
+            cmbBkpTime.Text = "24"; //A Thread 'u' será iniciada dentro de cmbBkpTime_SelectedIndexChanged.
+            vTime = "24";
+
         }
 
-    private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
+        private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             this.Visible=true;
         }
