@@ -1,15 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Threading;
-using MySql.Data;
 
 namespace GIPPBackup
 {
@@ -125,6 +117,12 @@ namespace GIPPBackup
                     
                     txtFilesPath.Text = line;
                 }
+
+                FileInfo file = new FileInfo(@"C:\Program Files (x86)\GIPP Backup\data_wait.txt");
+                if (!file.Exists)
+                {
+                    File.Create(@"C:\Program Files (x86)\GIPP Backup\data_wait.txt");
+                }
             }
             catch (Exception ex)
             {
@@ -169,6 +167,7 @@ namespace GIPPBackup
                 today = today.Replace("/", "-");
                 string sourcePath = @"" + txtFilesPath.Text;
                 string targetPath = @"" + txtBakPath.Text + @"GIPP_Backup_" + today;
+                Thread.Sleep(10000);
 
                 if (!System.IO.Directory.Exists(targetPath))
                 {
@@ -206,7 +205,7 @@ namespace GIPPBackup
                 v = new Thread(vThreadProcess);
                 v.Start();
 
-                int i = 10;
+                int i = 20;
                 while (i > 0)
                 {
                     this.lblFiles.BeginInvoke((MethodInvoker)delegate () { this.lblFiles.Text = "Verificando backup... " + i.ToString(); });
@@ -222,10 +221,17 @@ namespace GIPPBackup
                         v = new Thread(vThreadProcess);
                         v.Start();
                         this.lblFiles.BeginInvoke((MethodInvoker)delegate () { vWait = true; });
-                        
-                        while (vWait == true)
+
+                        Boolean data_wait=true;
+
+                        while ((vWait == true) & (data_wait == true))
                         {
+                            FileInfo file = new FileInfo(@"C:\Program Files (x86)\GIPP Backup\data_wait.txt");
                             Thread.Sleep(1000);
+                            if (!file.Exists)
+                            {
+                                data_wait = false;
+                            }
                         }
 
                         t = new Thread(tThreadProcess);
@@ -240,26 +246,34 @@ namespace GIPPBackup
                     vTimeI = (vTimeI * 60 * 60 * 1000);
                     //vTimeI=(10000);
                     Thread.Sleep(vTimeI); //A Thread dorme por um certo periodo determinado pelo cmbBkpTime.
+
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "ERRO!", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            
+
+            FileInfo file2 = new FileInfo(@"C:\Program Files (x86)\GIPP Backup\data_wait.txt");
+            if (!file2.Exists)
+            {
+                File.Create(@"C:\Program Files (x86)\GIPP Backup\data_wait.txt");
+            }
         }
 
         private void vThreadProcess()
         {
             try
             {
+                File.Delete(@"C:\GIPP\GIPP\MySQL\data.sql");
+                Thread.Sleep(2000);
                 string today = DateTime.Today.ToShortDateString();
                 today = today.Replace("/", "-");
                 string vCommand = "";
                 System.Diagnostics.Process.Start(@"C:\Program Files (x86)\GIPP Backup\mysql.bat", vCommand);
-                Thread.Sleep(5000);
+                Thread.Sleep(10000);
 
-                FileInfo file = new FileInfo(@"C:\GIPP\GIPP\MySQL\" + today + ".sql");
+                FileInfo file = new FileInfo(@"C:\GIPP\GIPP\MySQL\data.sql");
 
                 if (!file.Exists)
                 {
