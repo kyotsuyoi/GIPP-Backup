@@ -29,7 +29,7 @@ namespace GIPPBackup
                     String line = sr.ReadToEnd();
                     connection = new MySql.Data.MySqlClient.MySqlConnection(line);
                 }
-            }
+            }  
             catch (Exception ex)
             {
                 MessageBox.Show("Arquivo não pode ser lido: " + ex.Message, "Erro!", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -265,6 +265,13 @@ namespace GIPPBackup
         {
             try
             {
+                FileInfo file = new FileInfo(@"C:\Program Files (x86)\GIPP Backup\data_wait.txt");
+                Thread.Sleep(1000);
+                if (!file.Exists)
+                {
+                    MessageBox.Show("Não pode verificar o arquivo 'data_wait.txt'" , "ERRO!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
                 File.Delete(@"C:\GIPP\GIPP\MySQL\data.sql");
                 Thread.Sleep(2000);
                 string today = DateTime.Today.ToShortDateString();
@@ -273,9 +280,9 @@ namespace GIPPBackup
                 System.Diagnostics.Process.Start(@"C:\Program Files (x86)\GIPP Backup\mysql.bat", vCommand);
                 Thread.Sleep(10000);
 
-                FileInfo file = new FileInfo(@"C:\GIPP\GIPP\MySQL\data.sql");
+                FileInfo file1 = new FileInfo(@"C:\GIPP\GIPP\MySQL\data.sql");
 
-                if (!file.Exists)
+                if (!file1.Exists)
                 {
                     throw new DirectoryNotFoundException(
                         "Arquivo de backup de dados não foi criado");
